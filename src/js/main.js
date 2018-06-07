@@ -8,7 +8,7 @@ recipe_selectors = [
 	'.recipe-content',
 	'div[itemtype="http://schema.org/Recipe"]',
 	'div[itemtype="https://schema.org/Recipe"]',
-]
+];
 
 
 function hidePopup(){
@@ -16,6 +16,7 @@ function hidePopup(){
 }
 
 function showPopup(){
+	console.log("Got to showPopup");
 	recipe_selectors.every(function(s){
 		$r = $(s);
 		if ($r.length === 1){
@@ -31,7 +32,7 @@ function showPopup(){
 			// handle the two new buttons we attached to the popup
 			$('#_rf_closebtn').click(hidePopup);
 			$('#_rf_disablebtn').click(function(b){
-				chrome.storage.sync.set({[document.location.hostname]: true}, hidePopup);
+				browser.storage.sync.set({[document.location.hostname]: true}, hidePopup);
 			});
 
 			// add an event listener for clicking outside the recipe to close it
@@ -54,7 +55,7 @@ function showPopup(){
 }
 
 // check the blacklist to see if we should run on this site
-chrome.storage.sync.get(document.location.hostname, function(items) {
+browser.storage.sync.get(document.location.hostname).then(function(items) {
 	if (!(document.location.hostname in items)) {
 		showPopup();
 	}

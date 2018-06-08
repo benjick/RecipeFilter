@@ -11,42 +11,110 @@ recipe_selectors = [
 ];
 
 
-function hidePopup(){
-	$('#_rf_highlight').fadeOut();
+
+function ready(fn) {
+    if (document.attachEvent ? document.readyState === "complete" : document.readyState !== "loading"){
+        fn();
+    } else {
+        document.addEventListener('DOMContentLoaded', fn);
+    }
 }
 
+
+function parseHTML(str) {
+    var tmp = document.implementation.createHTMLDocument();
+    tmp.body.innerHTML = str;
+    return tmp.body;
+};
+
+function fadeIn(el) {
+    el.style.opacity = 0;
+
+    var last = +new Date();
+    var tick = function() {
+        el.style.opacity = +el.style.opacity + (new Date() - last) / 400;
+        last = +new Date();
+
+        if (+el.style.opacity < 1) {
+            (window.requestAnimationFrame && requestAnimationFrame(tick)) || setTimeout(tick, 16);
+        } else {
+            el.style.opacity = 1;
+        }
+    };
+
+    tick();
+}
+
+function fadeOut(el) {
+
+    var last = +new Date();
+    var tick = function() {
+        el.style.opacity = +el.style.opacity - (new Date() - last) / 400;
+        last = +new Date();
+
+        if (+el.style.opacity > 0) {
+            (window.requestAnimationFrame && requestAnimationFrame(tick)) || setTimeout(tick, 16);
+        } else {
+        	el.style.opacity = 0;
+		}
+
+    };
+
+    tick();
+}
+
+function hidePopup(){
+	fadeOut(document.getElementById("_rf_highlight"));
+}
+
+function isAncestor(child, target) {
+	if (document === target) {
+		return false;
+	}
+	if (target === child) {
+		return true;
+	}
+	return isAncestor(child, target.parent)
+}
+
+function handleMouseUp(e) {
+    if (!isAncestor(e.target, cloned))
+    {
+        hidePopup();
+        document.removeEventListener("clicked", handleMouseUp)
+    }
+}
 function showPopup(){
-	console.log("Got to showPopup");
 	recipe_selectors.every(function(s){
-		$r = $(s);
-		if ($r.length === 1){
+		var div = document.querySelectorAll(s);
+		var body = document.body;
+		if (div.length === 1){
+			div = div[0];
 			// clone the matched element and add some control buttons
-			$r.clone().attr('id', '_rf_highlight').prependTo('body').append(`
+			var cloned = div.cloneNode(true);
+			cloned.setAttribute('id', '_rf_highlight');
+			cloned.appendChild(parseHTML(`
 				<div id="_rf_header">
 					<button id="_rf_closebtn" class="_rfbtn">close recipe</button>
 					RecipeFilter
 					<button id="_rf_disablebtn" class="_rfbtn">disable on this site</button>
 				</div>
-			`).fadeIn(500);
+			`));
+			body.insertBefore(cloned, body.firstChild);
+			fadeIn(cloned);
+            cloned.style.display = 'block';
 
 			// handle the two new buttons we attached to the popup
-			$('#_rf_closebtn').click(hidePopup);
-			$('#_rf_disablebtn').click(function(b){
+			document.getElementById('_rf_closebtn').addEventListener("click", hidePopup);
+			document.getElementById('_rf_disablebtn').addEventListener("click", function(){
 				browser.storage.sync.set({[document.location.hostname]: true}, hidePopup);
 			});
 
 			// add an event listener for clicking outside the recipe to close it
-			$(document).mouseup(function(e) {
-				var container = $('#_rf_highlight');
-				if (!container.is(e.target) && container.has(e.target).length === 0) 
-				{
-				    hidePopup();
-				    $(document).unbind('mouseup');
-				}
-			});
+			document.addEventListener('mouseup', handleMouseUp);
 
 			// scroll to top in case they hit refresh while lower in page
-			$(window).scrollTop(0);
+			window.scrollTo(0, 0);
 			// it worked, stop iterating through recipe_selectors
 			return false;
 		}
@@ -55,8 +123,8 @@ function showPopup(){
 }
 
 // check the blacklist to see if we should run on this site
-browser.storage.sync.get(document.location.hostname).then(function(items) {
+ready(browser.storage.sync.get(document.location.hostname).then(function(items) {
 	if (!(document.location.hostname in items)) {
 		showPopup();
 	}
-});
+}));

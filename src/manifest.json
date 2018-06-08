@@ -2,7 +2,7 @@
   "manifest_version": 2,
   "name": "Recipe Filter",
   "short_name": "Recipe Filter",
-  "version": "0.2",
+  "version": "0.3",
   "developer": {
     "name": "SargeZT",
     "url": "https://reddit.com/u/SargeZT"
@@ -10,6 +10,7 @@
   "icons": {
     "128": "img/icon-128.png"
   },
+  "applications": {"gecko": {"id": "recipefilter@notarealdomain.xyz"}},
   "permissions": [
     "storage",
     "contextMenus"
@@ -24,7 +25,7 @@
         "http://*/*", "https://*/*"
       ],
       "css": ["css/recipe_filter.css"],
-      "js": ["js/jquery-3.2.1.min.js", "js/main.js"]
+      "js": ["js/main.js"]
     }
   ],
   "options_ui": {

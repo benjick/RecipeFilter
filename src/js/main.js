@@ -13,6 +13,9 @@ recipe_selectors = [
 
 
 function ready(fn) {
+    if (typeof fn !== "function") {
+        return;
+    }
     if (document.attachEvent ? document.readyState === "complete" : document.readyState !== "loading"){
         fn();
     } else {
